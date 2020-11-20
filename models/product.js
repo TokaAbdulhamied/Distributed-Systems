@@ -21,6 +21,10 @@ const Product = db.define('product', {
     description: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    isListed: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
     } 
 })
 

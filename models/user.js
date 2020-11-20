@@ -18,7 +18,15 @@ const User = db.define('user', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    name: Sequelize.STRING
+    name: Sequelize.STRING,
+    cash: {
+        type: Sequelize.FLOAT,
+        defaultValue: 0
+    },
+    isAdmin: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+    }
 }, {
     indexes: [
         {
