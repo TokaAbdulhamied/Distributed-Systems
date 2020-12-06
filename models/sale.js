@@ -2,7 +2,7 @@ import Sequelize from 'sequelize'
 import db from '../db/index.js'
 
 
-const OrderItem = db.define('orderItem', {
+const Sale = db.define('sale', {
     id: {
         type: Sequelize.INTEGER,
         autoIncrement: true,
@@ -17,10 +17,10 @@ const OrderItem = db.define('orderItem', {
         type: Sequelize.STRING,
         allowNull: false
     },
-    seller: {
+    buyer: {
         type: Sequelize.STRING,
         allowNull: false
     }
 })
 
-export default OrderItem
+export default Sale

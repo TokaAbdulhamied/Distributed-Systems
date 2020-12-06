@@ -3,34 +3,60 @@ import fs from 'fs'
 import path from 'path'
 import ejs from 'ejs'
 import pdf from 'html-pdf'
+import sequelize from 'sequelize'
+
+const {Op} = sequelize
 
 const __dirpath = path.resolve()
 
 export const getProducts = (req, res, next) => {
-    Product.findAll()
-        .then((products) => {
+
+    Product.findAll({where: {
+        isListed: true
+    }}).then((products) => {
             res.render(
                 'shop/product-list', 
                 {
                     prods: products, 
-                    pageTitle: 'All Products', 
-                    path: '/products', 
+                    pageTitle: 'Products', 
+                    path: '/', 
             })
+        }).catch((err) => {
+            console.log(err)
         })
     
 }
 
-export const getIndex = (req, res, next) => {
-    Product.findAll()
-        .then((products) => {
-            res.render(
-                'shop/index', 
-                {
-                    prods: products, 
-                    pageTitle: 'Shop', 
-                    path: '/', 
-            })
+export const getShop = (req, res, next) => {
+    req.user.getCart().then(cart => {
+        return cart.getProducts()
+    }).then(products => {
+        return products.map(product => {
+            return product.id
         })
+    }).then((cartProducts) => {
+        console.log(cartProducts)
+        return Product.findAll({where: {
+            isListed: true,
+            id: {
+                [Op.notIn]: cartProducts
+            },
+            [Op.not]: [
+                {userId: req.user.id}
+            ]
+        }})
+    }).then((products) => {
+        res.render(
+            'shop/index', 
+            {
+                prods: products, 
+                pageTitle: 'Shop', 
+                path: '/shop', 
+        })
+    }).catch((err) => {
+        console.log(err)
+    })
+    
 }
 
 export const getCart = (req, res, next) => {
@@ -48,23 +74,6 @@ export const getCart = (req, res, next) => {
         .catch((err) => {
             console.log(err)
         })
-    // Cart.getCart((cart) => {
-    //     Product.fetchAll((products) => {
-    //         const cartProducts = []
-    //         for (const product of products) {
-    //             const cartProduct = cart.products.find(cartProduct => cartProduct.id === product.id)
-    //             if (cartProduct) {
-    //                 cartProducts.push({productData: product, qty: cartProduct.qty})
-    //             }
-    //         }
-    //         res.render('shop/cart', {
-    //             path: '/cart',
-    //             pageTitle: 'Your Cart',
-    //             products: cartProducts
-    //         })
-    //     })
-        
-    // })
     
 }
 
@@ -76,7 +85,7 @@ export const getCheckOut = (req, res, next) => {
 }
 
 export const getOrders = (req, res, next) => {
-    req.user.getOrders({include: ['products']})
+    req.user.getOrders({include: ['orderItems']})
         .then(orders => {
             res.render('shop/orders', {
                 path: '/orders',
@@ -92,15 +101,20 @@ export const getOrders = (req, res, next) => {
 
 export const getProduct = (req, res, next) => {
     const productId = req.params.prodId
-    Product.findByPk(productId)
-        .then((productData) => {
+    Product.findOne({where: {
+            isListed: true,
+            id: productId
+        }
+    }).then((productData) => {
+            if(!productData) {
+                res.redirect('/')
+            }
             res.render('shop/product-detail', {
                 product: productData,
                 pageTitle: productData.title,
-                path: '/products',
+                path: '/',
             })
-        })
-        .catch(err => {
+        }).catch(err => {
             console.log(err)
 
         })
@@ -119,15 +133,16 @@ export const postCart = (req, res, next) => {
     })
     .then((products) => {
         if(products.length > 0) {
-            products[0]['cart item'].quantity +=1
-             return products[0]['cart item'].save()
+            throw new Error('product already exists')
+
         
         } else {
             return Product.findByPk(prodId)
                 .then((product) => {
-                    return userCart.addProduct(product, {through: {
-                        quantity: 1
-                    }})
+                    if (product.userId === req.user.id) {
+                        throw new Error('Invalid Operation')
+                    }
+                    return userCart.addProduct(product)
                 })
         }
     })
@@ -158,21 +173,53 @@ export const deleteCartItem = (req, res, next) => {
 
 export const postOrder = (req, res, next) => {
     let userCart
+    let productData
     req.user.getCart()
         .then(cart => {
             userCart = cart
-            return cart.getProducts()
+            return cart.getProducts({include: ['user']})
         })
         .then(products => {
-            return req.user.createOrder()
+            let price = 0
+            products.forEach(product => {
+                price= +price + +product.price
+            })
+            if (price > req.user.cash) {
+                throw new Error('Not enough cash!')
+            }
+            return req.user.createOrder({totalPrice: price})
                 .then(order => {
-                    order.addProducts(
-                        products.map(product => {
-                            product['order item'] = {quantity: product['cart item'].quantity}
-                            return product
+                    console.log(products)
+                    
+                    products.forEach(product => {
+                        product.userId = req.user.id
+                        product.isListed = false
+                        req.user.cash = +req.user.cash - +product.price
+                        product.user.cash = +product.user.cash + +product.price
+                        return product.user.createSale({
+                            productName: product.title,
+                            productPrice: product.price,
+                            buyer: req.user.email
+                        }).then(() => {
+                            return order.createOrderItem({
+                                productName: product.title,
+                                productPrice: product.price,
+                                seller: product.user.email
+                            })
+                        }).then(() => {
+                            return product.save()
+                        }).then(() => {
+                            return product.user.save()
+                        }).then(() => {
+                            return req.user.save()
                         })
-                    )
+                        
+                        
+                        
+                        
+                    })       
                 })
+      
         })
         .then(() => {
             return userCart.setProducts(null)
@@ -181,8 +228,23 @@ export const postOrder = (req, res, next) => {
             return res.redirect('/orders')
         })
         .catch(err => {
-            console.log(err)
+            next(err)
         })
+}
+
+export const getSales = (req, res, next) => {
+    req.user.getSales().then((sellings) => {
+        console.log(sellings)
+        return res.render('shop/sellings', {
+            pageTitle: 'My Sellings',
+            path: '/sales',
+            sellings: sellings
+    
+        }).catch(err => {
+            next(err)
+        })
+    })
+    
 }
 
 export const downloadInovice = (req, res, next) => {

@@ -34,6 +34,12 @@
                                         <input type="hidden" name="price" value="<%= product.price %>">
                                         <button class="btn" type="submit">Delete</button>
                                     </form>
+                                    <form action="/admin/list" method="post">
+                                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                        <input type="hidden" name="id" value="<%= product.id %>">
+                                        <input type="hidden" name="price" value="<%= product.price %>">
+                                        <button class="btn" type="submit"><%= product.isListed ? 'Unlist' : 'List' %></button>
+                                    </form>
 
                                 </div>
                             </article>

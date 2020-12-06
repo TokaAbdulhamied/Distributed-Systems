@@ -36,6 +36,15 @@ router.post('/signup',
     ], 
     authController.postSignUp
 )
+router.get('/add-cash', isAuth, authController.getAddCash)
+router.post('/add-cash', 
+    [
+        isAuth,
+        check('cash').isNumeric().withMessage('Enter a valid number!')
+    ], 
+    authController.postAddCash
+)
+
 
 
 

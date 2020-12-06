@@ -1,0 +1,28 @@
+<%- include('../includes/head.ejs') %>
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+            <% if (orders.length <= 0) {%>
+                <h1>Nothing here!</h1>
+            <% } else { %>
+                <ul>
+                    <% orders.forEach(order => {%>
+                        <li>
+                            <h1># <%= order.id %></h1>
+                            <form action="/orders/<%= order.id %>" method="post">
+                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                                <!-- <button class='btn' type="submit">Download Inovice</button> -->
+                            </form>
+                            <ul>
+                                <% order.orderItems.forEach(item => { %>
+                                    <li><%= item.productName %> (<%= item.productPrice %>)</li>
+                                <% }) %>
+                            </ul>
+                        </li>
+                    <% }) %> 
+                </ul>
+            <% } %>
+        </main>
+        <%- include('../includes/end.ejs') %>

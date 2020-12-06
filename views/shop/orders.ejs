@@ -1,28 +1,45 @@
 <%- include('../includes/head.ejs') %>
-    </head>
+<link rel="stylesheet" href="/css/order.css">
+</head>
 
-    <body>
-        <%- include('../includes/navigation.ejs') %>
-        <main>
-            <% if (orders.length <= 0) {%>
-                <h1>Nothing here!</h1>
-            <% } else { %>
-                <ul>
-                    <% orders.forEach(order => {%>
-                        <li>
-                            <h1># <%= order.id %></h1>
-                            <form action="/orders/<%= order.id %>" method="post">
-                                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
-                                <button class='btn' type="submit">Download Inovice</button>
-                            </form>
-                            <ul>
-                                <% order.products.forEach(product => { %>
-                                    <li><%= product.title %> (<%= product['order item'].quantity %>)</li>
-                                <% }) %>
-                            </ul>
-                        </li>
-                    <% }) %> 
-                </ul>
-            <% } %>
-        </main>
-        <%- include('../includes/end.ejs') %>
+<body>
+    <%- include('../includes/navigation.ejs') %>
+    <% if (orders.length <= 0) {%>
+        <h1>Nothing here!</h1>
+    <% } else { %>
+    <main>
+        
+            <% orders.forEach(order => {%>
+                <h3>Order #<%= order.id %>- <%= order.createdAt %> </h3>
+                <table>
+                    <tr>
+                        <th>product</th>
+                        <th>seller</th>
+                        <th>price</th>
+                    </tr>
+                    <% order.orderItems.forEach(item => { %>
+                        <tr>
+                            <td>
+                                <div class="info">
+                                    <p><%= item.productName %></p>
+                                </div>
+                            </td>
+                            <td><%=item.seller%></td>
+                            <td><%= item.productPrice %>$</td>
+                        </tr>
+                    <% }) %>
+
+                    <div class="total-price">
+                    <table class ="total"> 
+                        <tr class="total-row">
+                            <td>Total Price</td>
+                            <td><%= order.totalPrice %>$</td>
+                        </tr>
+                    </table>
+                    </div>
+                
+        <% }) %>
+        
+    </main>
+    <% } %>
+    <%- include('../includes/end.ejs') %>

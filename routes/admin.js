@@ -53,4 +53,6 @@ router.post('/edit-product',
 
 router.post('/delete-product', authValidators.isAuth, adminController.deleteProduct)
 
+router.post('/list', authValidators.isAuth, adminController.listProduct)
+
 export default router

@@ -143,3 +143,22 @@ export const deleteProduct = (req, res, next) => {
     
 }
 
+export const listProduct = (req, res, next) => {
+    const id = req.body.id
+    Product.findByPk(id)
+        .then(product => {
+            if (product.userId === req.user.id)
+            {
+                product.isListed = !product.isListed
+                return product.save()
+            }
+        })
+        .then(() => {
+            res.redirect('/admin/products')
+        })
+        .catch(err =>{
+            const error = new Error('test')
+            next(error)
+        })
+}
+

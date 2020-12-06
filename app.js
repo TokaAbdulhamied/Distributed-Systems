@@ -65,6 +65,7 @@ app.use((req, res, next) => {
         User.findByPk(req.session.user)
         .then(user => {
             req.user = user
+            console.log(req.user)
             next()
         })
         .catch(error => {
@@ -78,9 +79,11 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
     if (req.session.isAuthenticated) {
-        res.locals.isAuthenticated = req.session.isAuthenticated 
+        res.locals.isAuthenticated = req.session.isAuthenticated
+        res.locals.user = req.user
     } else {
         res.locals.isAuthenticated = undefined
+        res.locals.user = undefined
     }
     res.locals.csrfToken = req.csrfToken()
     next()
@@ -90,13 +93,22 @@ app.use('/admin', adminRoutes)
 app.use(shopRoutes)
 app.use(authRoutes)
 app.use(errorsController.get404)
-// app.use((error, req, res, next) => {
-//     res.render('500', {
-//         pageTitle: '500 Error',
-//         path: '500',
-//         isAuthenticated: req.session.isAuthenticated
-//     })
-// })
+app.use((error, req, res, next) => {
+    console.log(error.message)
+    if(error.message === 'Not enough cash!') {
+        return res.render('auth/add-cash', {
+            errorMssg: 'Not enough cash please add cash first',
+            path: '/add-cash',
+            pageTitle: 'Add Cash',
+            isAuthenticated: req.session.isAuthenticated
+        })
+    }
+    res.render('500', {
+        pageTitle: '500 Error',
+        path: '500',
+        isAuthenticated: req.session.isAuthenticated
+    })
+})
 
 
 createDataBaseRelations()

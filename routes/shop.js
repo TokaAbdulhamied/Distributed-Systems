@@ -7,9 +7,9 @@ import {isAuth} from '../controllers/auth.js'
 
 const router = express.Router()
 
-router.get('/', shopController.getIndex)
+router.get('/', shopController.getProducts)
 
-router.get('/products', shopController.getProducts)
+router.get('/shop', shopController.getShop)
 
 router.get('/products/:prodId', shopController.getProduct)
 
@@ -26,5 +26,7 @@ router.post('/cart/delete', isAuth, shopController.deleteCartItem)
 router.post('/create-order', isAuth, shopController.postOrder)
 
 router.post('/orders/:orderId', isAuth, shopController.downloadInovice)
+
+router.get('/sales', isAuth, shopController.getSales)
 
 export default router

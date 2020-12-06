@@ -4,7 +4,6 @@ const get404 = (req, res, next) => {
             '404-notfound', 
             {pageTitle: 'Not Found!',
             path:'',
-            isAuthenticated: req.isAuthenticated
 
         }
         )

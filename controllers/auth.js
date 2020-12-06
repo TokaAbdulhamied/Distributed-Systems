@@ -88,3 +88,29 @@ export const postSignUp = (req, res, next) => {
     
 
 }
+
+export const getAddCash = (req, res, next) => {
+    return res.render('auth/add-cash', {
+        path: '/add-cash',
+        pageTitle: 'Add Cash!'
+    })
+}
+
+export const postAddCash = (req, res, next) => {
+    const errors = validationResult(req)
+    if (!errors.isEmpty()) {
+        return res.render('auth/add-cash', {
+            path: '/add-cash',
+            pageTitle: 'Add Cash!',
+            errorMssg: errors.array()[0].msg
+        })
+    }
+    req.user.cash = +req.user.cash + +req.body.cash
+    req.user.save()
+        .then(() => {
+            res.redirect('/')
+        })
+        .catch(err => {
+            console.log(err)
+        })
+}

@@ -9,7 +9,6 @@ const CartItem = db.define('cart item', {
         autoIncrement: true,
         primaryKey: true
     },
-    quantity: Sequelize.INTEGER
 })
 
 export default CartItem

@@ -8,6 +8,10 @@ const Order = db.define('order', {
         autoIncrement: true,
         allowNull: false,
         primaryKey: true
+    },
+    totalPrice: {
+        type: Sequelize.FLOAT,
+        allowNull: false
     }
 })
 
