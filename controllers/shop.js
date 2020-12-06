@@ -4,6 +4,7 @@ import path from 'path'
 import ejs from 'ejs'
 import pdf from 'html-pdf'
 import sequelize from 'sequelize'
+import db from '../db/index.js'
 
 const {Op} = sequelize
 
@@ -171,66 +172,50 @@ export const deleteCartItem = (req, res, next) => {
         })
 }
 
-export const postOrder = (req, res, next) => {
-    let userCart
-    let productData
-    req.user.getCart()
-        .then(cart => {
-            userCart = cart
-            return cart.getProducts({include: ['user']})
+export const postOrder = async(req, res, next) => {
+    const transaction = await db.transaction()
+    try {
+        const cart = await req.user.getCart()
+        const products = await cart.getProducts({include: ['user']})
+        let price = 0
+        products.forEach(product => {
+            price= +price + +product.price
         })
-        .then(products => {
-            let price = 0
-            products.forEach(product => {
-                price= +price + +product.price
-            })
-            if (price > req.user.cash) {
-                throw new Error('Not enough cash!')
-            }
-            return req.user.createOrder({totalPrice: price})
-                .then(order => {
-                    console.log(products)
-                    
-                    products.forEach(product => {
-                        product.userId = req.user.id
-                        product.isListed = false
-                        req.user.cash = +req.user.cash - +product.price
-                        product.user.cash = +product.user.cash + +product.price
-                        return product.user.createSale({
-                            productName: product.title,
-                            productPrice: product.price,
-                            buyer: req.user.email
-                        }).then(() => {
-                            return order.createOrderItem({
-                                productName: product.title,
-                                productPrice: product.price,
-                                seller: product.user.email
-                            })
-                        }).then(() => {
-                            return product.save()
-                        }).then(() => {
-                            return product.user.save()
-                        }).then(() => {
-                            return req.user.save()
-                        })
-                        
-                        
-                        
-                        
-                    })       
-                })
-      
+        if (price > req.user.cash) {
+            throw new Error('Not enough cash!')
+        }
+        
+        const order = await req.user.createOrder({totalPrice: price}, {transaction})
+        await products.forEach(async(product) => {
+            product.userId = req.user.id
+            product.isListed = false
+            req.user.cash = +req.user.cash - +product.price
+            product.user.cash = +product.user.cash + +product.price
+            await product.user.createSale({
+                productName: product.title,
+                productPrice: product.price,
+                buyer: req.user.email
+            }, {transaction})
+            await order.createOrderItem({
+                productName: product.title,
+                productPrice: product.price,
+                seller: product.user.email
+            }, {transaction})
+            await product.save({transaction})
+            await product.user.save({transaction})
         })
-        .then(() => {
-            return userCart.setProducts(null)
-        })
-        .then(() => {
-            return res.redirect('/orders')
-        })
-        .catch(err => {
-            next(err)
-        })
+        await req.user.save({transaction})
+        await cart.setProducts(null,{transaction})
+        return await transaction.commit()
+    }
+    catch (error){
+        console.log(error)
+        await transaction.rollback();
+        next(error)
+    }
+        
 }
+
 
 export const getSales = (req, res, next) => {
     req.user.getSales().then((sellings) => {
@@ -240,9 +225,9 @@ export const getSales = (req, res, next) => {
             path: '/sales',
             sellings: sellings
     
-        }).catch(err => {
-            next(err)
         })
+    }).catch(err => {
+        next(err)
     })
     
 }
