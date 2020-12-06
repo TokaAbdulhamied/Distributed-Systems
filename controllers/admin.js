@@ -1,4 +1,5 @@
 import Product from '../models/product.js'
+import Order from '../models/order.js'
 import validator from 'express-validator'
 
 
@@ -41,7 +42,7 @@ export const postAddProduct = (req, res, next) => {
     }).then(() => {
         res.redirect('/admin/products')
     }).catch(err => {
-        console.log(err)
+        next(err)
     })
                
     
@@ -58,7 +59,7 @@ export const getProducts = (req, res, next) => {
                 path: '/admin/products', 
         })
         })
-        .catch(err => console.log(err))
+        .catch(err => next(err))
 }
 
 export const getEditProduct = (req, res, next) => {
@@ -77,7 +78,7 @@ export const getEditProduct = (req, res, next) => {
             
         })
         .catch(err => {
-            console.log(err)
+            next(err)
         })
 }
 
@@ -120,7 +121,7 @@ export const postEditProduct = (req, res, next) => {
             res.redirect('/admin/products')
         })
         .catch(err => {
-            console.log(err)
+            next(err)
         })
 }
 
@@ -160,5 +161,21 @@ export const listProduct = (req, res, next) => {
             const error = new Error('test')
             next(error)
         })
+}
+
+export const getAllOrders = async(req, res, next) => {
+    try {
+        if(!req.user.isAdmin) {
+            throw new Error('You must be an admin to view this page!')
+        }
+        const orders = await Order.findAll({include: ['orderItems', 'user']})
+        return res.render('shop/all-orders', {
+            path: '/admin/allorders',
+            pageTitle: 'All Orders',
+            orders: orders,
+         })
+    } catch(error) {
+        next(error)
+    }
 }
 

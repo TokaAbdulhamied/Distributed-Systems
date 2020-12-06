@@ -55,4 +55,6 @@ router.post('/delete-product', authValidators.isAuth, adminController.deleteProd
 
 router.post('/list', authValidators.isAuth, adminController.listProduct)
 
+router.get('/allorders', authValidators.isAuth, adminController.getAllOrders)
+
 export default router

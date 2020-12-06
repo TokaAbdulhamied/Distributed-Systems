@@ -30,6 +30,11 @@
             <li class="main-header__item">
                 <a class="<%= path === '/sales' ? 'active' : '' %>" href="/sales">My Sales</a>
             </li>
+            <% if(user.isAdmin){%>
+            <li class="main-header__item">
+                <a class="<%= path === '/admin/allorders' ? 'active' : '' %>" href="/admin/allorders">All Orders</a>
+            </li>
+            <% } %>
             <% } %>
         </ul>
         <ul class="main-header__item-list">

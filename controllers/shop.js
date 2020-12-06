@@ -11,9 +11,14 @@ const {Op} = sequelize
 const __dirpath = path.resolve()
 
 export const getProducts = (req, res, next) => {
-
+    if(!req.query.search) {
+        req.query.search= ''
+    }
     Product.findAll({where: {
-        isListed: true
+        isListed: true,
+        title: {
+            [Op.like]: `%${req.query.search}%`
+        }
     }}).then((products) => {
             res.render(
                 'shop/product-list', 
@@ -23,12 +28,15 @@ export const getProducts = (req, res, next) => {
                     path: '/', 
             })
         }).catch((err) => {
-            console.log(err)
+            next(err)
         })
     
 }
 
 export const getShop = (req, res, next) => {
+    if(!req.query.search) {
+        req.query.search= ''
+    }
     req.user.getCart().then(cart => {
         return cart.getProducts()
     }).then(products => {
@@ -36,7 +44,6 @@ export const getShop = (req, res, next) => {
             return product.id
         })
     }).then((cartProducts) => {
-        console.log(cartProducts)
         return Product.findAll({where: {
             isListed: true,
             id: {
@@ -44,7 +51,10 @@ export const getShop = (req, res, next) => {
             },
             [Op.not]: [
                 {userId: req.user.id}
-            ]
+            ],
+            title: {
+                [Op.like]: `%${req.query.search}%`
+            }
         }})
     }).then((products) => {
         res.render(
@@ -55,7 +65,7 @@ export const getShop = (req, res, next) => {
                 path: '/shop', 
         })
     }).catch((err) => {
-        console.log(err)
+        next(err)
     })
     
 }
@@ -73,7 +83,7 @@ export const getCart = (req, res, next) => {
             })
         })
         .catch((err) => {
-            console.log(err)
+            next(err)
         })
     
 }
@@ -95,7 +105,7 @@ export const getOrders = (req, res, next) => {
              })
         })
         .catch(err => {
-            console.log(err)
+            next(err)
         })
     
 }
@@ -116,7 +126,7 @@ export const getProduct = (req, res, next) => {
                 path: '/',
             })
         }).catch(err => {
-            console.log(err)
+            next(err)
 
         })
        
@@ -151,7 +161,7 @@ export const postCart = (req, res, next) => {
         res.redirect('/cart')
     })
     .catch(err => {
-        console.log(err)
+        next(err)
     })
 }
 
@@ -168,7 +178,7 @@ export const deleteCartItem = (req, res, next) => {
             res.redirect('/cart')
         })
         .catch(err =>{
-            console.log(err)
+            next(err)
         })
 }
 
@@ -209,7 +219,6 @@ export const postOrder = async(req, res, next) => {
         return await transaction.commit()
     }
     catch (error){
-        console.log(error)
         await transaction.rollback();
         next(error)
     }
@@ -219,7 +228,6 @@ export const postOrder = async(req, res, next) => {
 
 export const getSales = (req, res, next) => {
     req.user.getSales().then((sellings) => {
-        console.log(sellings)
         return res.render('shop/sellings', {
             pageTitle: 'My Sellings',
             path: '/sales',
@@ -234,7 +242,6 @@ export const getSales = (req, res, next) => {
 
 export const downloadInovice = (req, res, next) => {
     const htmlPath = path.join(__dirpath, 'templates', 'inovice.html')
-    console.log(htmlPath)
     ejs.renderFile(htmlPath, (err, data) => {
         if(err) {
             console.log(err)

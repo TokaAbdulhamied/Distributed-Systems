@@ -24,7 +24,7 @@ export const postLogin = (req, res, next) => {
     const {email} = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        return res.status(400).render('auth/login.ejs', {
+        return res.status(422).render('auth/login.ejs', {
             pageTitle: "Login",
             path: "/login",
             errorMssg: errors.array()[0].msg,
@@ -36,7 +36,10 @@ export const postLogin = (req, res, next) => {
     req.session.isAuthenticated = true
     req.session.user = req.attemptingLoginUser.id
     return req.session.save(err => {
-        console.log(err);
+        if (err){
+            return next(err);
+        }
+        
         res.redirect('/')
     })
     
@@ -44,7 +47,9 @@ export const postLogin = (req, res, next) => {
 
 export const logout = (req, res, next) => {
     req.session.destroy((err) => {
-        console.log(err)
+        if (err){
+            return next(err)
+        }
         res.redirect('/login')
     })
 }
@@ -61,8 +66,7 @@ export const postSignUp = (req, res, next) => {
     const {name, email, password} = req.body
     const errors = validationResult(req)
     if (!errors.isEmpty()) {
-        console.log(errors.array())
-        return res.status(400).render('auth/signup', {
+        return res.status(422).render('auth/signup', {
             path: '/signup',
             pageTitle: 'Sign Up',
             errorMssg: errors.array()[0].msg,
@@ -82,7 +86,7 @@ export const postSignUp = (req, res, next) => {
         }).then(() => {
             res.redirect('/login')
         }).catch(err => {
-            console.log(err)
+            next(err)
         })
     })    
     
@@ -111,6 +115,6 @@ export const postAddCash = (req, res, next) => {
             res.redirect('/')
         })
         .catch(err => {
-            console.log(err)
+            next(err)
         })
 }
