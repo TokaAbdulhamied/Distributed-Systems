@@ -23,6 +23,8 @@ const createDataBaseRelations = () => {
     Order.hasMany(OrderItem)
     Sale.belongsTo(User, {onDelete: 'CASCADE'})
     User.hasMany(Sale)
+    User.hasMany(OrderItem)
+    OrderItem.belongsTo(User, {onDelete: 'CASCADE'})
     
     // Order.belongsToMany(Product, {through: OrderItem})
     // Product.belongsToMany(Order, {through: OrderItem})

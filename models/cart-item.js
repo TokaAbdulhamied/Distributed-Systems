@@ -9,6 +9,16 @@ const CartItem = db.define('cart item', {
         autoIncrement: true,
         primaryKey: true
     },
+    cartId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
+    },
+    productId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
+    }
     
 })
 

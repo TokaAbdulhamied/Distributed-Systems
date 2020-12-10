@@ -20,6 +20,16 @@ const OrderItem = db.define('orderItem', {
     seller: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    orderId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
+    },
+    userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
     }
 })
 

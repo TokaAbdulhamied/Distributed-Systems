@@ -244,7 +244,8 @@ export const postOrder = async(req, res, next) => {
             await order.createOrderItem({
                 productName: product.title,
                 productPrice: product.price,
-                seller: product.user.email
+                seller: product.user.email,
+                userId: req.user.id
             }, {transaction})
             await productUsers[product.user.id].save({transaction})
             await product.save({transaction})
