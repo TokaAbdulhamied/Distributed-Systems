@@ -67,7 +67,7 @@ export const getEditProduct = (req, res, next) => {
     Product.findByPk(productId)
         .then(productData => {
             if (productData.userId === req.user.id) {
-                res.render('admin/edit-product', {
+                return res.render('admin/edit-product', {
                     product: productData,
                     pageTitle: 'Edit Product',
                     path: '/admin/edit-product',

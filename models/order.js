@@ -12,6 +12,11 @@ const Order = db.define('order', {
     totalPrice: {
         type: Sequelize.FLOAT,
         allowNull: false
+    },
+    userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
     }
 })
 

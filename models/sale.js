@@ -20,6 +20,11 @@ const Sale = db.define('sale', {
     buyer: {
         type: Sequelize.STRING,
         allowNull: false
+    },
+    userId: {
+        type: Sequelize.INTEGER,
+        allowNull: false,
+        primaryKey: true
     }
 })
 

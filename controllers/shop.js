@@ -69,6 +69,28 @@ export const getShop = (req, res, next) => {
     })
     
 }
+export const apiGetShop = (req, res, next) => {
+    if(!req.query.search) {
+        req.query.search= ''
+    }
+    
+    Product.findAll({where: {
+            isListed: true,
+            title: {
+                [Op.like]: `%${req.query.search}%`
+            }
+    }}).then((products) => {
+        res.status(200).json({
+            success: true,
+            products
+        })
+    }).catch((err) => {
+        res.status(422).json({
+            success:false,
+        })
+    })
+    
+}
 
 export const getCart = (req, res, next) => {
     req.user.getCart()
@@ -161,7 +183,7 @@ export const postCart = (req, res, next) => {
         res.redirect('/cart')
     })
     .catch(err => {
-        next(err)
+        next(err);
     })
 }
 
@@ -184,12 +206,14 @@ export const deleteCartItem = (req, res, next) => {
 
 export const postOrder = async(req, res, next) => {
     const transaction = await db.transaction()
+    const productUsers = {};
     try {
         const cart = await req.user.getCart()
         const products = await cart.getProducts({include: ['user']})
         let price = 0
         products.forEach(product => {
             price= +price + +product.price
+            productUsers[product.user.id] = product.user
         })
         if (price > req.user.cash) {
             throw new Error('Not enough cash!')
@@ -198,9 +222,20 @@ export const postOrder = async(req, res, next) => {
         const order = await req.user.createOrder({totalPrice: price}, {transaction})
         await products.forEach(async(product) => {
             product.userId = req.user.id
+            if(!product.isListed){
+              
+                await transaction.rollback();
+                await cart.setProducts(null);
+                let err =  new Error("Item already purchesed");
+                next(err);
+                
+                
+                
+            }
             product.isListed = false
             req.user.cash = +req.user.cash - +product.price
-            product.user.cash = +product.user.cash + +product.price
+            productUsers[product.user.id].cash = +productUsers[product.user.id].cash + +product.price
+            
             await product.user.createSale({
                 productName: product.title,
                 productPrice: product.price,
@@ -211,15 +246,19 @@ export const postOrder = async(req, res, next) => {
                 productPrice: product.price,
                 seller: product.user.email
             }, {transaction})
+            await productUsers[product.user.id].save({transaction})
             await product.save({transaction})
-            await product.user.save({transaction})
+            
         })
+        
         await req.user.save({transaction})
         await cart.setProducts(null,{transaction})
-        return await transaction.commit()
+        await transaction.commit()
+        return res.redirect('/orders')
     }
     catch (error){
-        await transaction.rollback();
+
+        await transaction.rollback(); 
         next(error)
     }
         

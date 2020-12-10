@@ -6,13 +6,15 @@ import Product from './product.js'
 import User from './user.js'
 import Session from './session.js'
 import Sale from './sale.js'
+import sequelize from 'sequelize'
+import db from '../db/index.js'
 
 
 const createDataBaseRelations = () => {
     Product.belongsTo(User, {onDelete: 'CASCADE'})
     User.hasMany(Product)
-    User.hasOne(Cart)
-    Cart.belongsTo(User, {onDelete: 'CASCADE'})
+    User.hasOne(Cart, {foreignKey: 'id'})
+    Cart.belongsTo(User, {onDelete: 'CASCADE', foreignKey: 'id'})
     Cart.belongsToMany(Product, {through: CartItem})
     Product.belongsToMany(Cart, {through: CartItem})
     Order.belongsTo(User, {onDelete: 'CASCADE'})
@@ -21,6 +23,7 @@ const createDataBaseRelations = () => {
     Order.hasMany(OrderItem)
     Sale.belongsTo(User, {onDelete: 'CASCADE'})
     User.hasMany(Sale)
+    
     // Order.belongsToMany(Product, {through: OrderItem})
     // Product.belongsToMany(Order, {through: OrderItem})
 }

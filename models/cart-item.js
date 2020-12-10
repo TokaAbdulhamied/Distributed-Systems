@@ -9,6 +9,7 @@ const CartItem = db.define('cart item', {
         autoIncrement: true,
         primaryKey: true
     },
+    
 })
 
 export default CartItem

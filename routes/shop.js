@@ -28,5 +28,6 @@ router.post('/create-order', isAuth, shopController.postOrder)
 router.post('/orders/:orderId', isAuth, shopController.downloadInovice)
 
 router.get('/sales', isAuth, shopController.getSales)
+router.get('/api/shop', shopController.apiGetShop)
 
 export default router
