@@ -11,20 +11,20 @@ import db from '../db/index.js'
 
 
 const createDataBaseRelations = () => {
-    Product.belongsTo(User, {onDelete: 'CASCADE'})
+    Product.belongsTo(User, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
     User.hasMany(Product)
-    User.hasOne(Cart, {foreignKey: 'id'})
-    Cart.belongsTo(User, {onDelete: 'CASCADE', foreignKey: 'id'})
+    User.hasOne(Cart, {foreignKey: 'id', onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
+    Cart.belongsTo(User, {onDelete: 'CASCADE', onUpdate: 'RESTRICT',foreignKey: 'id'})
     Cart.belongsToMany(Product, {through: CartItem})
     Product.belongsToMany(Cart, {through: CartItem})
-    Order.belongsTo(User, {onDelete: 'CASCADE'})
+    Order.belongsTo(User, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
     User.hasMany(Order)
-    OrderItem.belongsTo(Order, {onDelete: 'CASCADE'})
+    OrderItem.belongsTo(Order, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
     Order.hasMany(OrderItem)
-    Sale.belongsTo(User, {onDelete: 'CASCADE'})
+    Sale.belongsTo(User, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
     User.hasMany(Sale)
-    User.hasMany(OrderItem)
-    OrderItem.belongsTo(User, {onDelete: 'CASCADE'})
+    User.hasMany(OrderItem, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
+    OrderItem.belongsTo(User, {onDelete: 'CASCADE', onUpdate: 'RESTRICT'})
     
     // Order.belongsToMany(Product, {through: OrderItem})
     // Product.belongsToMany(Order, {through: OrderItem})
