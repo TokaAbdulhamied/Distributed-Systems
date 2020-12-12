@@ -10,19 +10,19 @@ The following must be installed on your system:
 
 First, you have to start the database cluster:
 1. navigate to the directory of your clone.
-2. run `sudo docker-compose -p citus up`
-3. in a new terminal run `sudo docker-compose -p citus scale worker=5`
+2. run `sudo docker-compose -p citus up` (Should run this first time only!)
+3. in a new terminal run `sudo docker-compose -p citus scale worker=5` (Should run this first time only!)
 
 That's it now our cluster is running
 
 Then, you will have to start the ExpressJS server;
 1. navigate to the directory of your clone.
-2. run `npm i`
-3. run `npm start`
+2. run `npm i` (Should run this first time only!)
+3. run `npm start` (Every time to start the server)
 
 Now, the server is running too.
 
-Finally, you need to distribute the tables of the database:
+Finally, you need to distribute the tables of the database (Should run this first time only!): 
 1. navigate to the directory of your clone.
 2. run `sudo docker exec -it citus_master psql -U postgres`
 3. run 
@@ -37,7 +37,7 @@ To make sure that the distribution is done correctly run `SELECT * FROM master_g
 
 Now you can use the app at your [localhost](http://localhost:3000/).
 
-You can stop the database by running `sudo docker-compose -p citus stop` and start it again with `sudo docker-compose -p citus start`
+You can stop the database by running `sudo docker-compose -p citus stop` and start it again with `sudo docker-compose -p citus start` (Should be run every time to start and stop the database)
 
 To destroy the database run `sudo docker-compose -p citus sown`
 
