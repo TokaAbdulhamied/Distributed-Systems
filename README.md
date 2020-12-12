@@ -34,6 +34,10 @@ SELECT create_distributed_table('orders', 'userId');
 SELECT create_distributed_table('"orderItems"', 'userId');
 ``` 
 
-Now you can use the app at your [localhost](http://localhost:3000/). 
+Now you can use the app at your [localhost](http://localhost:3000/).
+
+## To Create Admin User
+
+You must create a user with this email "admin@shop.com"
 
 
