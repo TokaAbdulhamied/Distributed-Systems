@@ -117,7 +117,7 @@ app.use((error, req, res, next) => {
 createDataBaseRelations()
 
 
-db.sync({force: true})
+db.sync()
     .then(res => {
         app.listen(3000)
     })

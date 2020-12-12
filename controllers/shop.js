@@ -1,4 +1,6 @@
 import Product from '../models/product.js'
+import User from '../models/user.js'
+import OrderItem from '../models/order-item.js'
 import fs from 'fs'
 import path from 'path'
 import ejs from 'ejs'
@@ -118,8 +120,16 @@ export const getCheckOut = (req, res, next) => {
 }
 
 export const getOrders = (req, res, next) => {
-    req.user.getOrders({include: ['orderItems']})
-        .then(orders => {
+    req.user.getOrders()
+        .then(async(orders) => {
+            orders = await orders.map(async(order) => {
+                order.orderItems = await OrderItem.findAll({where: {
+                    orderId: order.id
+                }})
+                return order
+            })
+            orders= await Promise.all(orders)
+            console.log(orders)
             res.render('shop/orders', {
                 path: '/orders',
                 pageTitle: 'Orders',
@@ -206,60 +216,76 @@ export const deleteCartItem = (req, res, next) => {
 
 export const postOrder = async(req, res, next) => {
     const transaction = await db.transaction()
-    const productUsers = {};
+    let productUsers = {};
     try {
         const cart = await req.user.getCart()
-        const products = await cart.getProducts({include: ['user']})
+        const products = await cart.getProducts()
         let price = 0
-        products.forEach(product => {
+        
+        const done = products.map(async(product) => {
             price= +price + +product.price
-            productUsers[product.user.id] = product.user
+            // console.log("user id ", product.userId)
+            // const productUser = await User.findByPk(product.userId);
+            // console.log("this is the user",productUser)
+            // return productUser;
+            if(!product.isListed){
+                await cart.setProducts(null);
+                throw new Error('item already purchased!')      
+            }
+            productUsers[product.userId] = await User.findByPk(product.userId);
+            return 1;
+
         })
+        await Promise.all(done);
+        // productUsers = await Promise.all(promises)
+        // console.log("all users are", productUsers);
         if (price > req.user.cash) {
             throw new Error('Not enough cash!')
         }
         
-        const order = await req.user.createOrder({totalPrice: price}, {transaction})
-        await products.forEach(async(product) => {
-            product.userId = req.user.id
-            if(!product.isListed){
-              
-                await transaction.rollback();
-                await cart.setProducts(null);
-                let err =  new Error("Item already purchesed");
-                next(err);
-                
-                
-                
-            }
+        
+        const order = await req.user.createOrder({totalPrice: price}, )
+        console.log("omar1")
+        const promises = await products.map(async(product) => {
+            
+            
             product.isListed = false
             req.user.cash = +req.user.cash - +product.price
-            productUsers[product.user.id].cash = +productUsers[product.user.id].cash + +product.price
-            
-            await product.user.createSale({
+            // console.log("omar2")
+            // await productUsers[product.userId]
+            console.log('user', productUsers[product.userId])
+            productUsers[product.userId].cash = +productUsers[product.userId].cash + +product.price
+            await productUsers[product.userId].createSale({
                 productName: product.title,
                 productPrice: product.price,
                 buyer: req.user.email
-            }, {transaction})
+            }, )
+
             await order.createOrderItem({
                 productName: product.title,
                 productPrice: product.price,
-                seller: product.user.email,
+                seller: productUsers[product.userId].email,
                 userId: req.user.id
-            }, {transaction})
-            await productUsers[product.user.id].save({transaction})
-            await product.save({transaction})
+            }, )
+
+            await productUsers[product.userId].save()
+            // console.log("omar3")
+
+            product.userId = req.user.id
+            await product.save()
+            return 1
+            
             
         })
-        
-        await req.user.save({transaction})
-        await cart.setProducts(null,{transaction})
-        await transaction.commit()
+        await Promise.all(promises)
+        await req.user.save()
+        await cart.setProducts(null)
+        // await transaction.commit()
         return res.redirect('/orders')
     }
     catch (error){
 
-        await transaction.rollback(); 
+        // await transaction.rollback(); 
         next(error)
     }
         

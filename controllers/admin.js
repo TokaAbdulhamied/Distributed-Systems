@@ -1,5 +1,6 @@
 import Product from '../models/product.js'
 import Order from '../models/order.js'
+import OrderItem from '../models/order-item.js'
 import validator from 'express-validator'
 
 
@@ -168,7 +169,15 @@ export const getAllOrders = async(req, res, next) => {
         if(!req.user.isAdmin) {
             throw new Error('You must be an admin to view this page!')
         }
-        const orders = await Order.findAll({include: ['orderItems', 'user']})
+        let orders = await Order.findAll({order: [['createdAt', 'ASC'],],include: ['user']})
+        orders = orders.map(async(order) => {
+            order.orderItems = await OrderItem.findAll({where: {
+                orderId: order.id
+            }})
+            return order;
+        })
+       
+        orders= await Promise.all(orders)
         return res.render('shop/all-orders', {
             path: '/admin/allorders',
             pageTitle: 'All Orders',

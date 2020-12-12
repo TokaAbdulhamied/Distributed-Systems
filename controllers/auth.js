@@ -81,6 +81,7 @@ export const postSignUp = (req, res, next) => {
             name,
             email,
             password: hashedPassword,
+            isAdmin: email === 'admin@shop.com'
         }).then(user => {
             user.createCart()
         }).then(() => {
