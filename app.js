@@ -15,6 +15,11 @@ import flash from 'connect-flash'
 import multer from 'multer'
 import crypto from 'crypto'
 import cors from 'cors'
+import apiAuthRoutes from './apis/routes/auth.js'
+import apiShopRoutes from './apis/routes/shop.js'
+import apiAdminRoutes from './apis/routes/admin.js'
+
+
 
 
 const __dirname = path.resolve()
@@ -52,12 +57,22 @@ app.use(bodyParser.urlencoded({extended: false}))
 
 app.use(multer({storage: fileStorage, fileFilter}).single('image'))
 
+app.use(bodyParser.json())
+
 app.use(session({
     store,
     secret: "917356Oo",
     resave: false,
     saveUninitialized: false
 }))
+
+app.use('/api', apiAuthRoutes)
+app.use('/api', apiShopRoutes)
+app.use('/api', apiAdminRoutes)
+
+
+
+
 
 app.use(csrfProtection)
 
@@ -97,6 +112,14 @@ app.use(shopRoutes)
 app.use(authRoutes)
 app.use(errorsController.get404)
 app.use((error, req, res, next) => {
+    if(error.statusCode) {
+        return res.status(error.statusCode).json({
+            success: false,
+            statusCode: error.statusCode,
+            message: error.message,
+            validators: error.validators,
+        })
+    }
     console.log(error.message)
     if(error.message === 'Not enough cash!') {
         return res.render('auth/add-cash', {
