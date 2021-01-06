@@ -112,6 +112,7 @@ app.use(shopRoutes)
 app.use(authRoutes)
 app.use(errorsController.get404)
 app.use((error, req, res, next) => {
+    console.log(error)
     if(error.statusCode) {
         return res.status(error.statusCode).json({
             success: false,

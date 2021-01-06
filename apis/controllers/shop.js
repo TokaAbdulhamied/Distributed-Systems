@@ -60,6 +60,7 @@ export const getShop = (req, res, next) => {
             products
         })
     }).catch((error) => {
+        console.log(error)
         passError(error, next)
     })
     
@@ -203,6 +204,11 @@ export const makeOrder = async(req, res, next) => {
     try {
         const cart = await req.user.getCart()
         const products = await cart.getProducts()
+        if(products.length < 1) {
+            const error = new Error("No items in the cart!")
+            error.statusCode = 422
+            throw error
+        }
         let price = 0
         
         const done = products.map(async(product) => {

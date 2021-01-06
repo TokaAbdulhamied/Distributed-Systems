@@ -161,6 +161,12 @@ export const getAllOrders = async(req, res, next) => {
             order.dataValues.orderItems = await OrderItem.findAll({where: {
                 orderId: order.id
             }})
+            delete order.dataValues.user.dataValues.password
+            delete order.dataValues.user.dataValues.cash
+            delete order.dataValues.user.dataValues.isAdmin
+            order.dataValues.buyer = order.dataValues.user
+            delete order.dataValues.user
+            console.log(order)
             return order;
         })
        

@@ -92,6 +92,7 @@ export const login = (req, res, next) => {
     
 export const signUp = (req, res, next) => {
     const errors = validationResult(req)
+    let userData;
     if(!errors.isEmpty()) {
         const error = new Error("Validation error!")
         error.statusCode = 422
@@ -108,9 +109,13 @@ export const signUp = (req, res, next) => {
             password: pass
         })
     }).then((user) => {
+        userData = user
+        return user.createCart()
+        
+    }).then((cart) => {
         return res.status(201).json({
             success: true,
-            id: user.id,
+            id: userData.id,
         })
     }).catch((error) => {
         passError(error, next)
